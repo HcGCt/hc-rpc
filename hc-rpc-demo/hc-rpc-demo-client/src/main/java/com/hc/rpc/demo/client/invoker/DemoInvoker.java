@@ -1,5 +1,6 @@
 package com.hc.rpc.demo.client.invoker;
 
+import com.hc.rpc.demo.client.dto.Student;
 import com.hc.rpc.demo.client.service.DemoService;
 import com.hc.rpc.invoker.CallType;
 import com.hc.rpc.invoker.RpcInvokeCallback;
@@ -31,18 +32,18 @@ public class DemoInvoker {
         rpcReferenceBean.setService(DemoService.class);
         rpcReferenceBean.setTimeout(10000000);
         rpcReferenceBean.setCallType(CallType.SYNC);
-        rpcReferenceBean.setServerAddress("192.168.88.1:9999");
+        // rpcReferenceBean.setServerAddress("192.168.88.1:9999");
         DemoService service = (DemoService) rpcReferenceBean.getObject();
 
-        String hello = service.sayHello("张三");
-        System.out.println(hello);
+        Student student = service.getStudent("张三");
+        System.out.println(student);
     }
 
     public static void testCallback() throws Exception {
         RpcReferenceBean rpcReferenceBean = new RpcReferenceBean();
         rpcReferenceBean.setService(DemoService.class);
         rpcReferenceBean.setTimeout(10000000);
-        rpcReferenceBean.setServerAddress("192.168.88.1:9999");
+        // rpcReferenceBean.setServerAddress("192.168.88.1:9999");
         rpcReferenceBean.setCallType(CallType.CALLBACK);
         DemoService service = (DemoService) rpcReferenceBean.getObject();
 
