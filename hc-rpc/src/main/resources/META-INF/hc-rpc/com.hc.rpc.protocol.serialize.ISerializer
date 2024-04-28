@@ -1,0 +1,2 @@
+json=com.hc.rpc.protocol.serialize.JsonSerializer
+hessian=com.hc.rpc.protocol.serialize.HessianSerializer

@@ -1,0 +1,2 @@
+local=com.hc.rpc.registry.LocalRegistryCenter
+redis=com.hc.rpc.registry.RedisRegistryCenter

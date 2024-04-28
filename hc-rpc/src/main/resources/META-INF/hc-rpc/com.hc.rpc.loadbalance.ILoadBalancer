@@ -1,0 +1,2 @@
+consistentHash=com.hc.rpc.loadbalance.ConsistentHashLoadBalancer
+roundRobin=com.hc.rpc.loadbalance.RoundRobinLoadBalancer
