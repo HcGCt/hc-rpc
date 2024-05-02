@@ -7,7 +7,7 @@ import com.hc.rpc.protocol.MsgHeader;
 import com.hc.rpc.protocol.RpcMessage;
 import com.hc.rpc.loadbalance.ILoadBalancer;
 import com.hc.rpc.loadbalance.LoadBalancerFactory;
-import com.hc.rpc.loadbalance.ProviderMateRes;
+import com.hc.rpc.loadbalance.ProviderMetaRes;
 import com.hc.rpc.utils.IpUtil;
 import com.hc.rpc.utils.RpcStringUtil;
 import io.netty.channel.DefaultEventLoop;
@@ -87,18 +87,18 @@ public class RpcInvokerProxy implements InvocationHandler {
 
         RpcInvoker invoker = RpcInvoker.getInstance();
         String providerName = RpcStringUtil.buildProviderKey(request.getClazzName(), request.getVersion());
-        ProviderMate targetProviderMate = null;
-        Collection<ProviderMate> otherProviderMates = null;
+        ProviderMeta targetProviderMeta = null;
+        Collection<ProviderMeta> otherProviderMetas = null;
         if (serverAddress != null && serverAddress.length() > 0) {
-            targetProviderMate = new ProviderMate();
-            targetProviderMate.setName(providerName);
-            targetProviderMate.setAddress(serverAddress);
+            targetProviderMeta = new ProviderMeta();
+            targetProviderMeta.setName(providerName);
+            targetProviderMeta.setAddress(serverAddress);
         } else {
             // 获取负载均衡策略,必须有注册中心
             final ILoadBalancer loadBalancer = LoadBalancerFactory.get(loadBalanceStrategy);
-            ProviderMateRes providerMateRes = loadBalancer.select(args, providerName);
-            targetProviderMate = providerMateRes.getCur();
-            otherProviderMates = providerMateRes.getOthers();
+            ProviderMetaRes providerMetaRes = loadBalancer.select(args, providerName);
+            targetProviderMeta = providerMetaRes.getCur();
+            otherProviderMetas = providerMetaRes.getOthers();
         }
         long count = 1;     // 请求次数
         long retryCount = this.retryCount;
@@ -111,10 +111,10 @@ public class RpcInvokerProxy implements InvocationHandler {
                 if (CallType.SYNC == callType) {
                     RpcFuture<RpcResponse> rpcFuture = new RpcFuture<>(new DefaultPromise<>(new DefaultEventLoop()), timeout, null);
                     RpcRequestHolder.REQUEST_MAP.put(requestId, rpcFuture);
-                    invoker.sendRequest(rpcMessage, targetProviderMate);
+                    invoker.sendRequest(rpcMessage, targetProviderMeta);
                     // 等待,同步
                     rpcResponse = rpcFuture.getPromise().get(rpcFuture.getTimeout(), TimeUnit.MILLISECONDS);
-                    if (rpcResponse.getException() != null && (otherProviderMates == null || otherProviderMates.size() == 0)) {
+                    if (rpcResponse.getException() != null && (otherProviderMetas == null || otherProviderMetas.size() == 0)) {
                         throw rpcResponse.getException();
                     }
                     if (rpcResponse.getException() != null) {
@@ -134,7 +134,7 @@ public class RpcInvokerProxy implements InvocationHandler {
                     }
                     RpcFuture<RpcResponse> rpcFuture = new RpcFuture<>(new DefaultPromise<>(new DefaultEventLoop()), timeout, rpcInvokeCallback);
                     RpcRequestHolder.REQUEST_MAP.put(requestId, rpcFuture);
-                    invoker.sendRequest(rpcMessage, targetProviderMate);
+                    invoker.sendRequest(rpcMessage, targetProviderMeta);
                     return null;
                 }
 
@@ -154,10 +154,10 @@ public class RpcInvokerProxy implements InvocationHandler {
                     case Failover:
                         logger.warn("rpc 调用失败,第{}次重试,异常信息:{}", count, errorMsg);
                         count++;
-                        if (otherProviderMates != null && otherProviderMates.size() > 0) {
-                            final ProviderMate next = otherProviderMates.iterator().next();
-                            targetProviderMate = next;
-                            otherProviderMates.remove(next);
+                        if (otherProviderMetas != null && otherProviderMetas.size() > 0) {
+                            final ProviderMeta next = otherProviderMetas.iterator().next();
+                            targetProviderMeta = next;
+                            otherProviderMetas.remove(next);
                         } else {
                             logger.warn("rpc 调用失败,无服务可用 providerName: {}, 异常信息: {}", providerName, errorMsg);
                             throw new RuntimeException("服务调用失败");

@@ -14,5 +14,5 @@ public interface ILoadBalancer {
      * @param providerName
      * @return
      */
-    ProviderMateRes select(Object[] args, String providerName);
+    ProviderMetaRes select(Object[] args, String providerName);
 }

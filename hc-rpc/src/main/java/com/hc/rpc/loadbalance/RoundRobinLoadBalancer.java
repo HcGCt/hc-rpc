@@ -1,6 +1,6 @@
 package com.hc.rpc.loadbalance;
 
-import com.hc.rpc.common.ProviderMate;
+import com.hc.rpc.common.ProviderMeta;
 import com.hc.rpc.config.RpcConfig;
 import com.hc.rpc.registry.IRegistryCenter;
 import com.hc.rpc.registry.RedisRegistryCenter;
@@ -23,7 +23,7 @@ public class RoundRobinLoadBalancer implements ILoadBalancer {
     private static AtomicInteger roundRobinId = new AtomicInteger(0);
 
     @Override
-    public ProviderMateRes select(Object[] args, String providerName) {
+    public ProviderMetaRes select(Object[] args, String providerName) {
 
         IRegistryCenter registryCenter = null;
         try {
@@ -32,7 +32,7 @@ public class RoundRobinLoadBalancer implements ILoadBalancer {
             logger.error("获取注册中心错误.", e);
             throw new RuntimeException(e);
         }
-        List<ProviderMate> discoveries = registryCenter.discoveries(providerName);
+        List<ProviderMeta> discoveries = registryCenter.discoveries(providerName);
         int size = discoveries.size();
         roundRobinId.incrementAndGet();
         if (roundRobinId.get() == Integer.MAX_VALUE) {
@@ -40,7 +40,7 @@ public class RoundRobinLoadBalancer implements ILoadBalancer {
             roundRobinId.set(0);
         }
         // / by zero
-        ProviderMate providerMate = size > 0 ? discoveries.get(roundRobinId.get() % size) : new ProviderMate();
-        return ProviderMateRes.build(providerMate, discoveries);
+        ProviderMeta providerMeta = size > 0 ? discoveries.get(roundRobinId.get() % size) : new ProviderMeta();
+        return ProviderMetaRes.build(providerMeta, discoveries);
     }
 }

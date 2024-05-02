@@ -1,6 +1,6 @@
 package com.hc.rpc.registry;
 
-import com.hc.rpc.common.ProviderMate;
+import com.hc.rpc.common.ProviderMeta;
 import com.hc.rpc.utils.RpcStringUtil;
 
 import java.io.IOException;
@@ -10,29 +10,29 @@ import java.util.*;
  * @Author hc
  */
 public class LocalRegistryCenter implements IRegistryCenter {
-    private Map<String, Set<ProviderMate>> registryData = new HashMap<>();
+    private Map<String, Set<ProviderMeta>> registryData = new HashMap<>();
 
 
     @Override
-    public void register(ProviderMate providerMate) throws Exception {
-        String key = RpcStringUtil.buildProviderKey(providerMate.getName(), providerMate.getVersion());
-        Set<ProviderMate> providerMates = registryData.get(key);
-        if (providerMates == null) {
-            providerMates = new HashSet<>();
+    public void register(ProviderMeta providerMeta) throws Exception {
+        String key = RpcStringUtil.buildProviderKey(providerMeta.getName(), providerMeta.getVersion());
+        Set<ProviderMeta> providerMetas = registryData.get(key);
+        if (providerMetas == null) {
+            providerMetas = new HashSet<>();
         }
-        providerMates.add(providerMate);
-        registryData.put(key, providerMates);
+        providerMetas.add(providerMeta);
+        registryData.put(key, providerMetas);
     }
 
     @Override
-    public void unRegister(ProviderMate providerMate) throws Exception {
-        String key = RpcStringUtil.buildProviderKey(providerMate.getName(), providerMate.getVersion());
+    public void unRegister(ProviderMeta providerMeta) throws Exception {
+        String key = RpcStringUtil.buildProviderKey(providerMeta.getName(), providerMeta.getVersion());
         if (registryData.containsKey(key)) {
-            Set<ProviderMate> providerMates = registryData.get(key);
-            Iterator<ProviderMate> iterator = providerMates.iterator();
+            Set<ProviderMeta> providerMetas = registryData.get(key);
+            Iterator<ProviderMeta> iterator = providerMetas.iterator();
             while (iterator.hasNext()) {
-                ProviderMate next = iterator.next();
-                if (next.equals(providerMate)) {
+                ProviderMeta next = iterator.next();
+                if (next.equals(providerMeta)) {
                     iterator.remove();
                     return;
                 }
@@ -41,7 +41,7 @@ public class LocalRegistryCenter implements IRegistryCenter {
     }
 
     @Override
-    public List<ProviderMate> discoveries(String providerName) {
+    public List<ProviderMeta> discoveries(String providerName) {
         if (registryData.containsKey(providerName)) {
             return new ArrayList<>(registryData.get(providerName));
         }

@@ -1,6 +1,6 @@
 package com.hc.rpc.invoker;
 
-import com.hc.rpc.common.ProviderMate;
+import com.hc.rpc.common.ProviderMeta;
 import com.hc.rpc.common.RpcRequest;
 import com.hc.rpc.protocol.RpcMessage;
 import com.hc.rpc.protocol.codec.Decoder;
@@ -54,23 +54,23 @@ public class RpcInvoker implements IRpcInvoker {
      * 发送请求
      *
      * @param rpcMessage
-     * @param providerMate
+     * @param providerMeta
      * @throws Exception
      */
     @Override
-    public void sendRequest(RpcMessage<RpcRequest> rpcMessage, ProviderMate providerMate) throws Exception {
-        if (providerMate != null) {
+    public void sendRequest(RpcMessage<RpcRequest> rpcMessage, ProviderMeta providerMeta) throws Exception {
+        if (providerMeta != null) {
             // 连接
-            String ip = providerMate.getAddress().split(":")[0];
-            int port = Integer.parseInt(providerMate.getAddress().split(":")[1]);
+            String ip = providerMeta.getAddress().split(":")[0];
+            int port = Integer.parseInt(providerMeta.getAddress().split(":")[1]);
             ChannelFuture future = bootstrap.connect(ip, port).sync();
             future.addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture channelFuture) throws Exception {
                     if (future.isSuccess()) {
-                        logger.info("连接 rpc server 成功, addr: {}", providerMate.getAddress());
+                        logger.info("连接 rpc server 成功, addr: {}", providerMeta.getAddress());
                     } else {
-                        logger.error("连接 rpc server 失败, addr: {}", providerMate.getAddress());
+                        logger.error("连接 rpc server 失败, addr: {}", providerMeta.getAddress());
                         future.cause().printStackTrace();
                         eventLoopGroup.shutdownGracefully();
                     }

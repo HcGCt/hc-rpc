@@ -1,6 +1,6 @@
 package com.hc.rpc.provider;
 
-import com.hc.rpc.common.ProviderMate;
+import com.hc.rpc.common.ProviderMeta;
 import com.hc.rpc.config.RpcConfig;
 import com.hc.rpc.protocol.codec.Decoder;
 import com.hc.rpc.protocol.codec.Encoder;
@@ -103,16 +103,16 @@ public class RpcProviderFactory {
             version = "1.0";
         }
         try {
-            ProviderMate providerMate = new ProviderMate();
-            providerMate.setAddress(IpUtil.getIpPort(serverHost, serverPort));
-            providerMate.setVersion(version);
-            providerMate.setName(serviceName);
+            ProviderMeta providerMeta = new ProviderMeta();
+            providerMeta.setAddress(IpUtil.getIpPort(serverHost, serverPort));
+            providerMeta.setVersion(version);
+            providerMeta.setName(serviceName);
             // 注册服务
             IRegistryCenter registryCenter = RegistryFactory.get(registerType);
-            registryCenter.register(providerMate);
+            registryCenter.register(providerMeta);
 
             // 缓存
-            String key = RpcStringUtil.buildProviderKey(providerMate.getName(), providerMate.getVersion());
+            String key = RpcStringUtil.buildProviderKey(providerMeta.getName(), providerMeta.getVersion());
             rpcServiceMap.put(key, serviceBean);
             logger.info("register server {} version {}", serviceName, version);
         } catch (Exception e) {

@@ -1,6 +1,6 @@
 package com.hc.rpc.loadbalance;
 
-import com.hc.rpc.common.ProviderMate;
+import com.hc.rpc.common.ProviderMeta;
 import com.hc.rpc.config.RpcConfig;
 import com.hc.rpc.registry.IRegistryCenter;
 import com.hc.rpc.registry.LocalRegistryCenter;
@@ -30,7 +30,7 @@ public class ConsistentHashLoadBalancer implements ILoadBalancer {
     private final static String VIRTUAL_NODE_SPLIT = "$";
 
     @Override
-    public ProviderMateRes select(Object[] args, String providerName) {
+    public ProviderMetaRes select(Object[] args, String providerName) {
 
         IRegistryCenter registryCenter = null;
         try {
@@ -39,20 +39,20 @@ public class ConsistentHashLoadBalancer implements ILoadBalancer {
             logger.error("获取注册中心错误.", e);
             throw new RuntimeException(e);
         }
-        List<ProviderMate> discoveries = registryCenter.discoveries(providerName);
+        List<ProviderMeta> discoveries = registryCenter.discoveries(providerName);
 
         // 哈希映射,并获取最近的下一个节点
-        ProviderMate providerMate = allocateNode(makeConsistentHashRing(discoveries), args[0].hashCode());
-        return ProviderMateRes.build(providerMate, discoveries);
+        ProviderMeta providerMeta = allocateNode(makeConsistentHashRing(discoveries), args[0].hashCode());
+        return ProviderMetaRes.build(providerMeta, discoveries);
     }
 
     /**
      * TreeMap简单实现哈希环
      * TreeMap#ceilingEntry(K key) 返回大于等于key的value,若不存在则返回null并设置key->null
      */
-    private TreeMap<Integer, ProviderMate> makeConsistentHashRing(List<ProviderMate> servers) {
-        TreeMap<Integer, ProviderMate> ring = new TreeMap<>();
-        for (ProviderMate instance : servers) {
+    private TreeMap<Integer, ProviderMeta> makeConsistentHashRing(List<ProviderMeta> servers) {
+        TreeMap<Integer, ProviderMeta> ring = new TreeMap<>();
+        for (ProviderMeta instance : servers) {
             for (int i = 0; i < VIRTUAL_NODE_SIZE; i++) {
                 ring.put((instance.getAddress() + VIRTUAL_NODE_SPLIT + i).hashCode(), instance);
             }
@@ -60,9 +60,9 @@ public class ConsistentHashLoadBalancer implements ILoadBalancer {
         return ring;
     }
 
-    private ProviderMate allocateNode(TreeMap<Integer, ProviderMate> ring, int hashCode) {
+    private ProviderMeta allocateNode(TreeMap<Integer, ProviderMeta> ring, int hashCode) {
         // 获取最近的下一个哈希环上节点位置
-        Map.Entry<Integer, ProviderMate> entry = ring.ceilingEntry(hashCode);
+        Map.Entry<Integer, ProviderMeta> entry = ring.ceilingEntry(hashCode);
         if (entry == null) {
             entry = ring.firstEntry();
         }

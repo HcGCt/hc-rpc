@@ -1,7 +1,7 @@
 package com.hc.rpc.registry;
 
 import com.alibaba.fastjson.JSON;
-import com.hc.rpc.common.ProviderMate;
+import com.hc.rpc.common.ProviderMeta;
 import com.hc.rpc.config.RpcConfig;
 import com.hc.rpc.utils.RpcStringUtil;
 import com.hc.rpc.utils.UUIDUtils;
@@ -53,7 +53,7 @@ public class RedisRegistryCenter implements IRegistryCenter {
         long delay = 5;  // 5s检测一次
         heartbeatExecutorService.scheduleWithFixedDelay(() -> {
             for (String key : serviceMap) {
-                List<ProviderMate> providerNodes = getProviders(key);
+                List<ProviderMeta> providerNodes = getProviders(key);
                 providerNodes.removeIf(node -> {
                     long endTime = node.getEndTime();
                     if (endTime < System.currentTimeMillis()) {
@@ -82,15 +82,15 @@ public class RedisRegistryCenter implements IRegistryCenter {
         return jedis;
     }
 
-    private List<ProviderMate> getProviders(String key) {
+    private List<ProviderMeta> getProviders(String key) {
         Jedis jedis = getJedis();
         List<String> list = jedis.lrange(key, 0, -1);
         jedis.close();
-        List<ProviderMate> providerMates = list.stream().map(o -> JSON.parseObject(o, ProviderMate.class)).collect(Collectors.toList());
-        return providerMates;
+        List<ProviderMeta> providerMetas = list.stream().map(o -> JSON.parseObject(o, ProviderMeta.class)).collect(Collectors.toList());
+        return providerMetas;
     }
 
-    private void loadService(String key, List<ProviderMate> providerNodes) {
+    private void loadService(String key, List<ProviderMeta> providerNodes) {
         String script = "redis.call('DEL', KEYS[1])\n" +
                 "for i = 1, #ARGV do\n" +
                 "   redis.call('RPUSH', KEYS[1], ARGV[i])\n" +
@@ -107,18 +107,18 @@ public class RedisRegistryCenter implements IRegistryCenter {
 
 
     @Override
-    public void register(ProviderMate providerMate) throws Exception {
-        String key = RpcStringUtil.buildProviderKey(providerMate.getName(), providerMate.getVersion());
+    public void register(ProviderMeta providerMeta) throws Exception {
+        String key = RpcStringUtil.buildProviderKey(providerMeta.getName(), providerMeta.getVersion());
         if (!serviceMap.contains(key)) {
             serviceMap.add(key);
         }
-        providerMate.setUUID(this.UUID);
-        providerMate.setEndTime(System.currentTimeMillis() + ttl);
+        providerMeta.setUUID(this.UUID);
+        providerMeta.setEndTime(System.currentTimeMillis() + ttl);
         Jedis jedis = getJedis();
         String script = "redis.call('RPUSH', KEYS[1], ARGV[1])\n" +
                 "redis.call('EXPIRE', KEYS[1], ARGV[2])";
         List<String> value = new ArrayList<>();
-        value.add(JSON.toJSONString(providerMate));
+        value.add(JSON.toJSONString(providerMeta));
         value.add(String.valueOf(10));
         jedis.eval(script, Collections.singletonList(key), value);
         jedis.close();
@@ -126,11 +126,11 @@ public class RedisRegistryCenter implements IRegistryCenter {
 
     // 主动注销服务
     @Override
-    public void unRegister(ProviderMate providerMate) throws Exception {
+    public void unRegister(ProviderMeta providerMeta) throws Exception {
     }
 
     @Override
-    public List<ProviderMate> discoveries(String providerName) {
+    public List<ProviderMeta> discoveries(String providerName) {
         return getProviders(providerName);
     }
 

@@ -6,7 +6,7 @@ import java.io.Serializable;
  * 服务提供者信息
  * @Author hc
  */
-public class ProviderMate implements Serializable {
+public class ProviderMeta implements Serializable {
     private String name;
     private String address;
     private String version;
@@ -63,7 +63,7 @@ public class ProviderMate implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        ProviderMate other = (ProviderMate) o;
+        ProviderMeta other = (ProviderMeta) o;
         return name.equals(other.name)
                 && address.equals(other.address) &&
                 version.equals(other.version);
