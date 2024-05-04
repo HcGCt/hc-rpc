@@ -67,17 +67,15 @@ public class RpcInvokerFactory {
 
 
     // ------------ createRpcReferenceBean ------------
-    public static RpcReferenceBean createRpcReferenceBean(Class<?> interfaceClass, long timeout) {
+    public static RpcReferenceBean createRpcReferenceBean(long timeout) {
         RpcReferenceBean rpcReferenceBean = new RpcReferenceBean();
-        rpcReferenceBean.setService(interfaceClass);
         rpcReferenceBean.setTimeout(timeout);
         rpcReferenceBean.setCallType(CallType.SYNC);
         return rpcReferenceBean;
     }
 
-    public static RpcReferenceBean createRpcReferenceBean(Class<?> interfaceClass, long timeout, CallType callType, RpcInvokeCallback invokeCallback) {
+    public static RpcReferenceBean createRpcReferenceBean(long timeout, CallType callType, RpcInvokeCallback invokeCallback) {
         RpcReferenceBean rpcReferenceBean = new RpcReferenceBean();
-        rpcReferenceBean.setService(interfaceClass);
         rpcReferenceBean.setTimeout(timeout);
         rpcReferenceBean.setCallType(callType);
         rpcReferenceBean.setInvokeCallback(invokeCallback);
@@ -85,7 +83,6 @@ public class RpcInvokerFactory {
     }
 
     public static RpcReferenceBean createRpcReferenceBean(
-            Class<?> interfaceClass,
             String version,
             long timeout,
             String loadBalanceStrategy,
@@ -93,7 +90,6 @@ public class RpcInvokerFactory {
             CallType callType,
             RpcInvokeCallback invokeCallback) {
         RpcReferenceBean rpcReferenceBean = new RpcReferenceBean();
-        rpcReferenceBean.setService(interfaceClass);
         rpcReferenceBean.setVersion(version);
         rpcReferenceBean.setTimeout(timeout);
         rpcReferenceBean.setLoadBalanceStrategy(loadBalanceStrategy);

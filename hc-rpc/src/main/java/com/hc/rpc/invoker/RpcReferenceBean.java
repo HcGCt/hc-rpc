@@ -11,8 +11,6 @@ import java.lang.reflect.Proxy;
  */
 public class RpcReferenceBean {
 
-    private Class<?> interfaceClass;
-
     private String version;
     private long timeout;
     private String loadBalanceStrategy;     // 负载均衡策略
@@ -31,22 +29,17 @@ public class RpcReferenceBean {
     }
 
     // 反射获取服务动态代理对象
-    public Object getObject() throws Exception {
-        if (interfaceClass == null) {
+    public <T> T getObject(Class<T> clazz) throws Exception {
+        if (clazz == null) {
             throw new UnsupportedOperationException("未执行服务接口");
         }
         // 根据代理RpcInvokerProxy获取服务代理
-        Object object = Proxy.newProxyInstance(
-                interfaceClass.getClassLoader(),
-                new Class<?>[]{interfaceClass},
+        T service = (T) Proxy.newProxyInstance(
+                clazz.getClassLoader(),
+                new Class<?>[]{clazz},
                 new RpcInvokerProxy(version, timeout, loadBalanceStrategy, faultTolerantStrategy, retryCount, callType, invokeCallback, serverAddress)
         );
-        return object;
-    }
-
-    // 必须先执行
-    public void setService(Class<?> interfaceClass) {
-        this.interfaceClass = interfaceClass;
+        return service;
     }
 
     public void setTimeout(long timeout) {

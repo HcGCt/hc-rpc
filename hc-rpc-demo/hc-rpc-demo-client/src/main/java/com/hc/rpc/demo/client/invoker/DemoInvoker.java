@@ -29,11 +29,10 @@ public class DemoInvoker {
 
     public static void testSYN() throws Exception {
         RpcReferenceBean rpcReferenceBean = new RpcReferenceBean();
-        rpcReferenceBean.setService(DemoService.class);
         rpcReferenceBean.setTimeout(10000000);
         rpcReferenceBean.setCallType(CallType.SYNC);
         // rpcReferenceBean.setServerAddress("192.168.88.1:9999");
-        DemoService service = (DemoService) rpcReferenceBean.getObject();
+        DemoService service = rpcReferenceBean.getObject(DemoService.class);
 
         Student student = service.getStudent("张三");
         System.out.println(student);
@@ -41,11 +40,10 @@ public class DemoInvoker {
 
     public static void testCallback() throws Exception {
         RpcReferenceBean rpcReferenceBean = new RpcReferenceBean();
-        rpcReferenceBean.setService(DemoService.class);
         rpcReferenceBean.setTimeout(10000000);
         // rpcReferenceBean.setServerAddress("192.168.88.1:9999");
         rpcReferenceBean.setCallType(CallType.CALLBACK);
-        DemoService service = (DemoService) rpcReferenceBean.getObject();
+        DemoService service = rpcReferenceBean.getObject(DemoService.class);
 
         RpcInvokeCallback.setCallback(new RpcInvokeCallback() {
             @Override

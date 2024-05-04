@@ -34,7 +34,7 @@ public class ConsistentHashLoadBalancer implements ILoadBalancer {
 
         IRegistryCenter registryCenter = null;
         try {
-            RegistryFactory.get(RpcConfig.getInstance().getRegisterType());
+            registryCenter = RegistryFactory.get(RpcConfig.getInstance().getRegisterType());
         } catch (Exception e) {
             logger.error("获取注册中心错误.", e);
             throw new RuntimeException(e);

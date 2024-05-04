@@ -12,7 +12,7 @@ import static com.hc.rpc.common.constants.Constants.*;
  */
 public class RpcConfig {
     private String serverHost = IpUtil.getLocalAddress().getHostAddress();
-    private Integer serverPort = 8080;
+    private Integer serverPort = 9090;
     private String version = "1.0";
     private String serialization = HESSIAN_SERIALIZATION;   // 默认序列化机制
     private String loadBalanceStrategy = ROUND_ROBIN;       // 默认负载均衡策略
