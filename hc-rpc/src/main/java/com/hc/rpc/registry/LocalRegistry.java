@@ -3,13 +3,12 @@ package com.hc.rpc.registry;
 import com.hc.rpc.common.ProviderMeta;
 import com.hc.rpc.utils.RpcStringUtil;
 
-import java.io.IOException;
 import java.util.*;
 
 /**
  * @Author hc
  */
-public class LocalRegistryCenter implements IRegistryCenter {
+public class LocalRegistry implements IRegistry {
     private Map<String, Set<ProviderMeta>> registryData = new HashMap<>();
 
 
@@ -41,11 +40,21 @@ public class LocalRegistryCenter implements IRegistryCenter {
     }
 
     @Override
+    public void heartbeat() {
+
+    }
+
+    @Override
     public List<ProviderMeta> discoveries(String providerName) {
         if (registryData.containsKey(providerName)) {
             return new ArrayList<>(registryData.get(providerName));
         }
         return new ArrayList<>();
+    }
+
+    @Override
+    public void watch(String serviceNodeKey) {
+
     }
 
     @Override

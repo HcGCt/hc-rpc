@@ -13,7 +13,7 @@ public class DemoProvider {
 
     public static void main(String[] args) {
         RpcProviderFactory providerFactory = new RpcProviderFactory();
-        providerFactory.setServerPort(9999);
+        providerFactory.setServerPort(9091);
         providerFactory.addService(DemoService.class.getSimpleName(), null, new DemoServiceImpl());
 
         providerFactory.start();

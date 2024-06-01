@@ -17,6 +17,7 @@ public class Constants {
     public static final String REDIS_REGISTRY = "redis";
     public static final String ZOOKEEPER_REGISTRY = "zookeeper";
     public static final String LOCAL_REGISTRY = "local";
+    public static final String ETCD_REGISTRY = "etcd";
 
     public static final String JSON_SERIALIZATION = "json";
     public static final String HESSIAN_SERIALIZATION = "hessian";

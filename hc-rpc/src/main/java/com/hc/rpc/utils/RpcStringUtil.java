@@ -5,7 +5,7 @@ package com.hc.rpc.utils;
  */
 public class RpcStringUtil {
 
-    public static String buildProviderKey(String name, String version) {
-        return String.join("$", name, version);
+    public static String buildProviderKey(String s1, String s2) {
+        return String.join(":", s1, s2);
     }
 }

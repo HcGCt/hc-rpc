@@ -21,9 +21,9 @@ public class RpcConfig {
      * 注册中心配置
      */
     // 注册中心地址
-    private String registerAddress = "127.0.0.1:6379";
+    private String registerAddress = "127.0.0.1:2181";
     // 注册中心类型
-    private String registerType = REDIS_REGISTRY;           // 默认注册中心
+    private String registerType = ZOOKEEPER_REGISTRY;           // 默认注册中心
     // 注册中心用户名及密码
     private String registerUsername = "";
     private String registerPsw = "";

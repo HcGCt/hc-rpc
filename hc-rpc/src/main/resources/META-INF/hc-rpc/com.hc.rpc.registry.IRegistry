@@ -1,0 +1,4 @@
+local=com.hc.rpc.registry.LocalRegistry
+zookeeper=com.hc.rpc.registry.ZooKeeperRegistry
+redis=com.hc.rpc.registry.RedisRegistry
+etcd=com.hc.rpc.registry.EtcdRegistry

@@ -2,10 +2,8 @@ package com.hc.rpc.loadbalance;
 
 import com.hc.rpc.common.ProviderMeta;
 import com.hc.rpc.config.RpcConfig;
-import com.hc.rpc.registry.IRegistryCenter;
-import com.hc.rpc.registry.LocalRegistryCenter;
+import com.hc.rpc.registry.IRegistry;
 import com.hc.rpc.registry.RegistryFactory;
-import com.hc.rpc.spi.SpiLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,14 +30,14 @@ public class ConsistentHashLoadBalancer implements ILoadBalancer {
     @Override
     public ProviderMetaRes select(Object[] args, String providerName) {
 
-        IRegistryCenter registryCenter = null;
+        IRegistry registry = null;
         try {
-            registryCenter = RegistryFactory.get(RpcConfig.getInstance().getRegisterType());
+            registry = RegistryFactory.get(RpcConfig.getInstance().getRegisterType());
         } catch (Exception e) {
             logger.error("获取注册中心错误.", e);
             throw new RuntimeException(e);
         }
-        List<ProviderMeta> discoveries = registryCenter.discoveries(providerName);
+        List<ProviderMeta> discoveries = registry.discoveries(providerName);
 
         // 哈希映射,并获取最近的下一个节点
         ProviderMeta providerMeta = allocateNode(makeConsistentHashRing(discoveries), args[0].hashCode());

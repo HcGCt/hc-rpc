@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
  * @Description 服务实例信息注册到redis, 启动定时任务进行心跳监测, 时间为ttl
  * @Author hc
  */
-public class RedisRegistryCenter implements IRegistryCenter {
+public class RedisRegistry implements IRegistry {
 
     private JedisPool jedisPool;
     private String UUID;
@@ -30,7 +30,7 @@ public class RedisRegistryCenter implements IRegistryCenter {
 
     private ScheduledExecutorService heartbeatExecutorService = Executors.newSingleThreadScheduledExecutor();
 
-    public RedisRegistryCenter() {
+    public RedisRegistry() {
         RpcConfig rpcConfig = RpcConfig.getInstance();
         String address = rpcConfig.getRegisterAddress();
         String ip = address.split(":")[0];
@@ -49,7 +49,8 @@ public class RedisRegistryCenter implements IRegistryCenter {
      * 间隔5s进行心跳检测:
      * 获取所有节点信息，检查其过期时间是否小于当前时间，如果小于则删除改服务节点信息
      */
-    private void heartbeat() {
+    @Override
+    public void heartbeat() {
         long delay = 5;  // 5s检测一次
         heartbeatExecutorService.scheduleWithFixedDelay(() -> {
             for (String key : serviceMap) {
@@ -108,7 +109,7 @@ public class RedisRegistryCenter implements IRegistryCenter {
 
     @Override
     public void register(ProviderMeta providerMeta) throws Exception {
-        String key = RpcStringUtil.buildProviderKey(providerMeta.getName(), providerMeta.getVersion());
+        String key = providerMeta.getName();
         if (!serviceMap.contains(key)) {
             serviceMap.add(key);
         }
@@ -132,6 +133,11 @@ public class RedisRegistryCenter implements IRegistryCenter {
     @Override
     public List<ProviderMeta> discoveries(String providerName) {
         return getProviders(providerName);
+    }
+
+    @Override
+    public void watch(String serviceNodeKey) {
+
     }
 
     @Override

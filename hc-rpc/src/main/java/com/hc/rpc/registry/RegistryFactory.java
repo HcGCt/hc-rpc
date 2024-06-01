@@ -7,10 +7,10 @@ import com.hc.rpc.spi.SpiLoader;
  */
 public class RegistryFactory {
     static {
-        SpiLoader.load(IRegistryCenter.class);
+        SpiLoader.load(IRegistry.class);
     }
 
-    public static IRegistryCenter get(String registryService) {
-        return SpiLoader.getInstance(IRegistryCenter.class, registryService);
+    public static IRegistry get(String registryService) {
+        return SpiLoader.getInstance(IRegistry.class, registryService);
     }
 }

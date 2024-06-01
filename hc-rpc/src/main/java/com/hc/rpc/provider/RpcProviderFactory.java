@@ -4,7 +4,7 @@ import com.hc.rpc.common.ProviderMeta;
 import com.hc.rpc.config.RpcConfig;
 import com.hc.rpc.protocol.codec.Decoder;
 import com.hc.rpc.protocol.codec.Encoder;
-import com.hc.rpc.registry.IRegistryCenter;
+import com.hc.rpc.registry.IRegistry;
 import com.hc.rpc.registry.RegistryFactory;
 import com.hc.rpc.utils.IpUtil;
 import com.hc.rpc.utils.RpcStringUtil;
@@ -16,14 +16,11 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.timeout.IdleStateHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 服务提供工厂
@@ -86,13 +83,13 @@ public class RpcProviderFactory {
         serverThread.start();
     }
 
-    public void stop(){
+    public void stop() {
         // 通过打断停止线程而非stop
         if (serverThread != null && serverThread.isAlive()) {
             serverThread.interrupt();
         }
-        IRegistryCenter registryCenter = RegistryFactory.get(registerType);
-        registryCenter.destroy();
+        IRegistry registry = RegistryFactory.get(registerType);
+        registry.destroy();
     }
 
 
@@ -108,8 +105,8 @@ public class RpcProviderFactory {
             providerMeta.setVersion(version);
             providerMeta.setName(serviceName);
             // 注册服务
-            IRegistryCenter registryCenter = RegistryFactory.get(registerType);
-            registryCenter.register(providerMeta);
+            IRegistry registry = RegistryFactory.get(registerType);
+            registry.register(providerMeta);
 
             // 缓存
             String key = RpcStringUtil.buildProviderKey(providerMeta.getName(), providerMeta.getVersion());
