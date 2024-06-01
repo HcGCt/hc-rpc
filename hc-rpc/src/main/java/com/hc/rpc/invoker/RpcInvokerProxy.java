@@ -125,12 +125,8 @@ public class RpcInvokerProxy implements InvocationHandler {
                         throw rpcResponse.getException();
                     }
                     logger.debug("rpc 调用成功, providerName: {}", providerName);
-                    if (count < retryCount) {
-                        int x = 1 / 0;
-                    }
                     return rpcResponse.getResult();
                 } else if (CallType.CALLBACK == callType) {
-                    // todo test
                     RpcInvokeCallback rpcInvokeCallback = invokeCallback;
                     RpcInvokeCallback threadLocalInvokeCallback = RpcInvokeCallback.getCallback();
                     if (threadLocalInvokeCallback != null) {
@@ -142,9 +138,6 @@ public class RpcInvokerProxy implements InvocationHandler {
                     RpcFuture<RpcResponse> rpcFuture = new RpcFuture<>(new DefaultPromise<>(new DefaultEventLoop()), timeout, rpcInvokeCallback);
                     RpcRequestHolder.REQUEST_MAP.put(requestId, rpcFuture);
                     invoker.sendRequest(rpcMessage, targetProviderMeta);
-                    if (count < retryCount) {
-                        int x = 1 / 0;
-                    }
                     return null;
                 }
 
