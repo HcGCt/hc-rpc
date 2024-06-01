@@ -2,52 +2,115 @@
 
 ## 系统设计
 
-![](https://cccblogimgs.oss-cn-hangzhou.aliyuncs.com/rpc%E6%9E%B6%E6%9E%84.png)
+![](https://cccblogimgs.oss-cn-hangzhou.aliyuncs.com/rpc.png)
 
-## 各模块详解
+这是基于Netty实现的简易RPC框架，具备一个RPC框架的基本功能，封装了底层通信细节，调用远程服务就像调用本地服务。可扩展实现注册中心、序列化方式、负载均衡等以覆盖默认实现的策略。
 
-- **loadbalance负载均衡策略**
+## 目录
 
-  - ConsistentHashLoadBalancer：一致性哈希算法
-  - RoundRobinLoadBalancer：轮询策略
+```
+|—— hc-rpc: rpc核心代码
+	|—— common: 公共实体类，包括常量、枚举、RPC请求类、RPC响应类等
+	|—— config: rpc公共配置类
+	|—— fault.tolerant: 容错机制，默认实现快速失败、故障转移、忽略三种策略
+	|—— invoker: 服务调用方，以代理方式发起网络请求
+	|—— loadbalance: 负载均衡策略，默认实现轮询、一致性哈希
+	|—— protocol: 协议层，定义消息格式、序列化方式以及编解码逻辑
+	|—— provider: 服务提供方，Netty多Reactor模型，请求处理逻辑采用反射调用
+	|—— registry: 注册中心，默认实现zookeeper、Etcd注册中心逻辑
+	|—— spi: SPI机制，动态加载注册中心、序列化方式、负载均衡、故障转移等，用户可自行扩展
+	|—— utils: 工具类
+|—— hc-rpc-demo: rpc简单用例
+	|—— hc-rpc-demo-client: 客户端，即invoker
+	|—— hc-rpc-demo-server: 服务端，即provider
+```
 
-- **protocol协议层**，定义消息传输的格式等
+##  使用
 
-  - codec
-    - Decoder:解码器，根据消息个数解码，通过固定`ByteBuf`标记，解决半包粘包的问题，即要求一次性解码一个完整的消息，否则指针回退
-    - Encoder:编码器，消息体分魔数、版本、消息状态等；消息体直接根据序列化器下序列化为字节数组
-  - serialize：序列化为字节码，或者反序列化为对象
-  - RpcMessage：网络传输消息，包括消息头与消息体
-  - MsgHeader：消息体头
+1. 首先导入依赖，需install本地仓库
 
-- **invoker服务调用方**
+   ```xml
+   <dependency>
+       <groupId>com.hc</groupId>
+       <artifactId>hc-rpc</artifactId>
+       <version>1.0-SNAPSHOT</version>
+   </dependency>
+   ```
 
-  - RpcInvoker：Netty客户端监听及发送客户端请求
-  - RpcInvokerProxy：客户端服务调用代理，服务调用基于代理模式，客户端使用动态代理对象调用请求的方法，此处编写调用方发起请求的流程：封装请求、负载均衡、重试机制、容错机制
-  - RpcReferenceBean：服务调用方入口类，动态代理对象以便发起远程调用
-  - RpcResponseHandler：Netty的ChannelHandler，执行接收响应的处理器逻辑，在编解码之后执行
+2. 定义远程调用接口
 
-- **provider服务提供方**
+   ```java
+   public interface DemoService {
+       String sayHello(String name);
+   }
+   ```
 
-  - RpcProviderFactory：服务提供工厂，负责启动Netty服务器，添加服务调用接口实现
-  - ThreadPoolFactory：服务端线程池，执行请求处理逻辑
-  - RpcRequestHandler：Netty的ChannelHandler，执行接收请求的的处理器逻辑，在编解码之后执行
+3. 服务端
 
-- **registry注册中心**
+   需实现服务接口
 
-  - RedistryFactory：注册中心工厂，获取具体的注册中心
-  - RedisRegistryCenter：Redis作为注册中心
-  - LoaclRegistryCenter：本地注册中心
-  - 其他TODO
+   ```java
+   public class DemoServiceImpl implements DemoService {
+       @Override
+       public String sayHello(String name) {
+           System.out.println(name + " hello!");
+           return name;
+       }
+   }
+   ```
 
-- **fault容错机制**
+   启动服务端：
 
-  SPI解耦TODO
+   ```java
+   public static void main(String[] args) {
+       RpcProviderFactory providerFactory = new RpcProviderFactory();
+       providerFactory.setServerPort(9090);
+       providerFactory.addService(DemoService.class.getSimpleName(), null, new DemoServiceImpl());
+       providerFactory.start();
+   }
+   ```
 
-- **SPI机制**
+4. 客户端
 
-  允许在运行时动态地加载实现特定接口的类，而不需要在代码中显式地指定该类，从而实现解耦和灵活性。实现高效的组件化和模块化，提高组件的扩展性。
+   ```java
+   public static void testSYN() throws Exception {
+       RpcReferenceBean rpcReferenceBean = new RpcReferenceBean();
+       rpcReferenceBean.setTimeout(1000);
+       rpcReferenceBean.setCallType(CallType.SYNC);
+       DemoService service = rpcReferenceBean.getObject(DemoService.class);
+       Student student = service.getStudent("张三");
+       System.out.println(student);
+   }
+   ```
 
-  - SpiLoader：基于类加载、反射机制
-    - 加载实现类
-    - 获取具体接口实例
+## todo list
+
+- [x] 注册中心
+  - [x] Zookeeper
+  - [x] Etcd
+  - [ ] Nacos
+  - [ ] ...
+- [x] 序列化
+  - [x] Json
+  - [x] Hessian
+  - [ ] Protostuff
+  - [ ] Kryo
+- [x] 负载均衡
+  - [x] 轮询策略
+  - [x] 一致性哈希
+  - [ ] 随机策略
+- [x] 容错机制
+  - [x] 重试
+  - [x] 快速失败
+  - [x] 故障转移
+  - [x] 忽略错误
+  - [ ] 降级
+- [x] 多版本
+- [x] SPI扩展
+- [ ] 过滤器
+- [ ] 服务治理
+- [ ] 服务监控
+- [ ] ......
+
+
+
