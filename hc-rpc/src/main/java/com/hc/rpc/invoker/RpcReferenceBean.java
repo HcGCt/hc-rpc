@@ -15,7 +15,7 @@ public class RpcReferenceBean {
     private long timeout;
     private String loadBalanceStrategy;     // 负载均衡策略
     private String faultTolerantStrategy;   // 容错机制
-    private int retryCount = 1;                 // 重试次数
+    private int retryCount = 3;                 // 重试次数
     private CallType callType = CallType.SYNC;  // 默认同步调用
     private RpcInvokeCallback invokeCallback;
 

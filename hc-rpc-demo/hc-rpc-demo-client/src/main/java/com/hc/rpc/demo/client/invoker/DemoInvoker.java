@@ -15,7 +15,7 @@ public class DemoInvoker {
     public static void main(String[] args) throws InterruptedException {
         try {
             testSYN();
-            testCallback();
+            // testCallback();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {

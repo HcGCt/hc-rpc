@@ -1,0 +1,3 @@
+failover=com.hc.rpc.fault.tolerant.FailOverTolerantStrategy
+failfast=com.hc.rpc.fault.tolerant.FailFastTolerantStrategy
+failsafe=com.hc.rpc.fault.tolerant.FailSafeTolerantStrategy

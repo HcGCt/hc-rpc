@@ -109,7 +109,7 @@ public class RedisRegistry implements IRegistry {
 
     @Override
     public void register(ProviderMeta providerMeta) throws Exception {
-        String key = providerMeta.getName();
+        String key = RpcStringUtil.buildProviderKey(providerMeta.getName(), providerMeta.getVersion());
         if (!serviceMap.contains(key)) {
             serviceMap.add(key);
         }

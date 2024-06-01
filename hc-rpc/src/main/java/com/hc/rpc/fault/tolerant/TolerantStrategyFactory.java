@@ -1,4 +1,4 @@
-package com.hc.rpc.fault;
+package com.hc.rpc.fault.tolerant;
 
 import com.hc.rpc.spi.SpiLoader;
 

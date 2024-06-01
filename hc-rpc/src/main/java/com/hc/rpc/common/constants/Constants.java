@@ -28,7 +28,7 @@ public class Constants {
 
     // 容错机制
     public static final String Failover = "failover";
-    public static final String FailFast = "failFast";
+    public static final String FailFast = "failfast";
     public static final String Failsafe = "failsafe";
 
 }

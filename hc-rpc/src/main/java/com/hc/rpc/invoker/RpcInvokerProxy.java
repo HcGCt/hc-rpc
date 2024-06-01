@@ -3,6 +3,8 @@ package com.hc.rpc.invoker;
 import com.hc.rpc.common.*;
 import com.hc.rpc.common.constants.MsgType;
 import com.hc.rpc.config.RpcConfig;
+import com.hc.rpc.fault.tolerant.ITolerantStrategy;
+import com.hc.rpc.fault.tolerant.TolerantStrategyFactory;
 import com.hc.rpc.protocol.MsgHeader;
 import com.hc.rpc.protocol.RpcMessage;
 import com.hc.rpc.loadbalance.ILoadBalancer;
@@ -18,6 +20,8 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static com.hc.rpc.common.RpcRequestHolder.REQUEST_ID_GEN;
@@ -100,7 +104,7 @@ public class RpcInvokerProxy implements InvocationHandler {
             targetProviderMeta = providerMetaRes.getCur();
             otherProviderMetas = providerMetaRes.getOthers();
         }
-        long count = 1;     // 请求次数
+        Integer count = 1;     // 请求次数
         long retryCount = this.retryCount;
         RpcResponse rpcResponse = null;
         // 重试机制
@@ -121,6 +125,9 @@ public class RpcInvokerProxy implements InvocationHandler {
                         throw rpcResponse.getException();
                     }
                     logger.debug("rpc 调用成功, providerName: {}", providerName);
+                    if (count < retryCount) {
+                        int x = 1 / 0;
+                    }
                     return rpcResponse.getResult();
                 } else if (CallType.CALLBACK == callType) {
                     // todo test
@@ -135,6 +142,9 @@ public class RpcInvokerProxy implements InvocationHandler {
                     RpcFuture<RpcResponse> rpcFuture = new RpcFuture<>(new DefaultPromise<>(new DefaultEventLoop()), timeout, rpcInvokeCallback);
                     RpcRequestHolder.REQUEST_MAP.put(requestId, rpcFuture);
                     invoker.sendRequest(rpcMessage, targetProviderMeta);
+                    if (count < retryCount) {
+                        int x = 1 / 0;
+                    }
                     return null;
                 }
 
@@ -142,35 +152,19 @@ public class RpcInvokerProxy implements InvocationHandler {
 
 
             } catch (Throwable e) {
-                String errorMsg = e.toString();
-                // 容错机制 todo
-
-                switch (faultTolerantStrategy) {
-                    // 快速失败
-                    case FailFast:
-                        logger.warn("rpc 调用失败,触发 FailFast 策略,异常信息: {}", errorMsg);
-                        return rpcResponse.getException();
-                    // 故障转移
-                    case Failover:
-                        logger.warn("rpc 调用失败,第{}次重试,异常信息:{}", count, errorMsg);
-                        count++;
-                        if (otherProviderMetas != null && otherProviderMetas.size() > 0) {
-                            final ProviderMeta next = otherProviderMetas.iterator().next();
-                            targetProviderMeta = next;
-                            otherProviderMetas.remove(next);
-                        } else {
-                            logger.warn("rpc 调用失败,无服务可用 providerName: {}, 异常信息: {}", providerName, errorMsg);
-                            throw new RuntimeException("服务调用失败");
-                        }
-                        break;
-                    // 忽视这次错误
-                    case Failsafe:
-                        return null;
-                }
+                ITolerantStrategy tolerantStrategy = TolerantStrategyFactory.get(faultTolerantStrategy);
+                Map<String, Object> context = new HashMap<>();
+                context.put("count", count);
+                context.put("otherProviderMetas", otherProviderMetas);
+                context.put("targetProviderMeta", targetProviderMeta);
+                rpcResponse = tolerantStrategy.handler(context, e);
+                count = (Integer) context.get("count");
             }
         }
-
-        throw new RuntimeException("rpc 调用失败，超过最大重试次数: {}" + retryCount);
+        if (rpcResponse != null) {
+            return rpcResponse.getResult();
+        }
+        throw new RuntimeException("rpc 调用失败，超过最大重试次数: " + retryCount);
     }
 
 
