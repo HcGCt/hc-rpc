@@ -4,7 +4,7 @@
 
 ![](https://cccblogimgs.oss-cn-hangzhou.aliyuncs.com/rpc.png)
 
-这是基于Netty实现的简易RPC框架，具备一个RPC框架的基本功能，封装了底层通信细节，调用远程服务就像调用本地服务。可扩展实现注册中心、序列化方式、负载均衡等以覆盖默认实现的策略。
+这是一个基于Netty实现的简易RPC框架，具备一个RPC框架的基本功能，封装了底层通信细节，调用远程服务就像调用本地服务。可扩展实现注册中心、序列化方式、负载均衡等以覆盖默认实现的策略。
 
 ## 目录
 
@@ -78,8 +78,8 @@
        rpcReferenceBean.setTimeout(1000);
        rpcReferenceBean.setCallType(CallType.SYNC);
        DemoService service = rpcReferenceBean.getObject(DemoService.class);
-       Student student = service.getStudent("张三");
-       System.out.println(student);
+       String hello = service.sayHello("张三");
+       System.out.println(hello);
    }
    ```
 
@@ -88,7 +88,11 @@
 - [x] Netty通信方式
   - [x] 自定义协议TCP通信
   - [ ] HTTP
-
+- [x] 调用方案
+  - [x] SYNC
+  - [x] CALLBACK 
+  - [ ] ONEWAY
+  - [ ] FUTURE
 - [x] 注册中心
   - [x] Zookeeper
   - [x] Etcd
