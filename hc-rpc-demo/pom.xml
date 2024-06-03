@@ -11,6 +11,7 @@
     <modules>
         <module>hc-rpc-demo-client</module>
         <module>hc-rpc-demo-server</module>
+        <module>hc-rpc-demo-test</module>
     </modules>
 
     <properties>
