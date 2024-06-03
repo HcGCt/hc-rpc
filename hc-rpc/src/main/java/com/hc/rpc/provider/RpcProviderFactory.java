@@ -45,7 +45,7 @@ public class RpcProviderFactory {
         }
         ServerThreadPoolFactory.init();
         serverThread = new Thread(() -> {
-            EventLoopGroup boss = new NioEventLoopGroup();
+            EventLoopGroup boss = new NioEventLoopGroup(1);
             EventLoopGroup worker = new NioEventLoopGroup();
             try {
                 ServerBootstrap bootstrap = new ServerBootstrap();

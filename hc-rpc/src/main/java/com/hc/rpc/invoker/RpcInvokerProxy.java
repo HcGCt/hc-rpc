@@ -111,7 +111,7 @@ public class RpcInvokerProxy implements InvocationHandler {
         while (count <= retryCount) {
             // 发送请求
             try {
-                // todo 异步同步
+                // todo future,oneway
                 if (CallType.SYNC == callType) {
                     RpcFuture<RpcResponse> rpcFuture = new RpcFuture<>(new DefaultPromise<>(new DefaultEventLoop()), timeout, null);
                     RpcRequestHolder.REQUEST_MAP.put(requestId, rpcFuture);
@@ -159,7 +159,4 @@ public class RpcInvokerProxy implements InvocationHandler {
         }
         throw new RuntimeException("rpc 调用失败，超过最大重试次数: " + retryCount);
     }
-
-
-    // todo 异步相关
 }

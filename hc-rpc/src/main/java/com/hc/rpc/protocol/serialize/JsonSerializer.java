@@ -11,8 +11,6 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 
 /**
- * TODO
- *
  * @Author hc
  */
 public class JsonSerializer implements ISerializer {

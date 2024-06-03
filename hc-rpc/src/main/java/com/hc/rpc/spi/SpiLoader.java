@@ -11,7 +11,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * SPI机制，实现服务组件动载加载、扩展
- * todo
  * @Author hc
  */
 public class SpiLoader {
