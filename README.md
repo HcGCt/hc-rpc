@@ -62,25 +62,20 @@
    启动服务端：
 
    ```java
-   public static void main(String[] args) {
-       RpcProviderFactory providerFactory = new RpcProviderFactory();
-       providerFactory.setServerPort(9090);
-       providerFactory.addService(DemoService.class.getSimpleName(), null, new DemoServiceImpl());
-       providerFactory.start();
-   }
+   RpcProviderFactory providerFactory = new RpcProviderFactory();
+   providerFactory.setServerPort(9090);
+   providerFactory.addService(DemoService.class.getSimpleName(), null, new DemoServiceImpl());
+   providerFactory.start();
    ```
-
+   
 4. 客户端
 
    ```java
-   public static void testSYN() throws Exception {
-       RpcReferenceBean rpcReferenceBean = new RpcReferenceBean();
-       rpcReferenceBean.setTimeout(1000);
-       rpcReferenceBean.setCallType(CallType.SYNC);
-       DemoService service = rpcReferenceBean.getObject(DemoService.class);
-       String hello = service.sayHello("张三");
-       System.out.println(hello);
-   }
+   RpcReferenceBean rpcReferenceBean = new RpcReferenceBean();
+   rpcReferenceBean.setTimeout(1000);
+   rpcReferenceBean.setCallType(CallType.SYNC);	// 设置调用方式,CALLBACK需实现回调
+   DemoService service = rpcReferenceBean.getObject(DemoService.class);
+   String hello = service.sayHello("张三");
    ```
 
 ## todo list
