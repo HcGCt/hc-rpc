@@ -1,5 +1,6 @@
 package com.hc.rpc.invoker;
 
+import com.hc.rpc.common.Beat;
 import com.hc.rpc.common.ProviderMeta;
 import com.hc.rpc.common.RpcRequest;
 import com.hc.rpc.protocol.RpcMessage;
@@ -10,8 +11,11 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.timeout.IdleStateHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * rpc 调用者
@@ -27,16 +31,20 @@ public class RpcInvoker implements IRpcInvoker {
         bootstrap = new Bootstrap();
         eventLoopGroup = new NioEventLoopGroup(4);
         bootstrap.group(eventLoopGroup).channel(NioSocketChannel.class)
-                .option(ChannelOption.SO_KEEPALIVE, true)
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
                         socketChannel.pipeline()
+                                // 客户端N时间没有读写时间，则触发IdleStateEvent
+                                .addLast(new IdleStateHandler(0,0, Beat.BEAT_INTERVAL, TimeUnit.SECONDS))
                                 .addLast(new Encoder())
                                 .addLast(new Decoder())
                                 .addLast(new RpcResponseHandler());
                     }
-                });
+                })
+                .option(ChannelOption.TCP_NODELAY, true)
+                .option(ChannelOption.SO_KEEPALIVE, true)
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000);;
 
     }
 

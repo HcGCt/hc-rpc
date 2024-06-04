@@ -1,15 +1,12 @@
 package com.hc.rpc.invoker;
 
+import com.hc.rpc.common.Beat;
 import com.hc.rpc.common.RpcFuture;
 import com.hc.rpc.common.RpcResponse;
 import com.hc.rpc.protocol.RpcMessage;
-import com.hc.rpc.registry.RegistryFactory;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import io.netty.handler.timeout.IdleStateEvent;
 
 import static com.hc.rpc.common.RpcRequestHolder.REQUEST_MAP;
 
@@ -54,5 +51,13 @@ public class RpcResponseHandler extends SimpleChannelInboundHandler<RpcMessage<R
         REQUEST_MAP.remove(requestId);
     }
 
-
+    @Override
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+        if (evt instanceof IdleStateEvent) {
+            // 检测到空闲，向服务端发送心跳包
+            ctx.writeAndFlush(Beat.BEAT_PING).sync();
+        } else {
+            super.userEventTriggered(ctx, evt);
+        }
+    }
 }

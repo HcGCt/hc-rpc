@@ -1,5 +1,6 @@
 package com.hc.rpc.provider;
 
+import com.hc.rpc.common.Beat;
 import com.hc.rpc.common.ProviderMeta;
 import com.hc.rpc.config.RpcConfig;
 import com.hc.rpc.protocol.codec.Decoder;
@@ -16,11 +17,13 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.timeout.IdleStateHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 服务提供工厂
@@ -56,6 +59,8 @@ public class RpcProviderFactory {
                             @Override
                             protected void initChannel(SocketChannel socketChannel) throws Exception {
                                 socketChannel.pipeline()
+                                        // 服务端N*2时间内没有读写时间，则触发IdleStateEvent事件
+                                        .addLast(new IdleStateHandler(0, 0, Beat.BEAT_INTERVAL * 2, TimeUnit.SECONDS))
                                         .addLast(new Encoder())
                                         .addLast(new Decoder())
                                         .addLast(new RpcRequestHandler());
