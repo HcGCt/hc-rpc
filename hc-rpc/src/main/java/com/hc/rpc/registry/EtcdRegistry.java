@@ -1,12 +1,12 @@
 package com.hc.rpc.registry;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.collection.ConcurrentHashSet;
 import cn.hutool.cron.CronUtil;
 import cn.hutool.cron.task.Task;
 import cn.hutool.json.JSONUtil;
 import com.hc.rpc.common.ProviderMeta;
 import com.hc.rpc.config.RpcConfig;
+import com.hc.rpc.utils.ConcurrentHashSet;
 import com.hc.rpc.utils.RpcStringUtil;
 import io.etcd.jetcd.*;
 import io.etcd.jetcd.options.GetOption;
@@ -160,23 +160,22 @@ public class EtcdRegistry implements IRegistry {
     public void watch(String providerName) {
         String registerKey = ETCD_ROOT_PATH + providerName;
         Watch watchClient = client.getWatchClient();
-        // 之前未被监听，开启监听
-        boolean newWatch = watchingKeySet.add(registerKey);
-        if (newWatch) {
-            watchClient.watch(ByteSequence.from(registerKey, StandardCharsets.UTF_8), response -> {
-                for (WatchEvent event : response.getEvents()) {
-                    switch (event.getEventType()) {
-                        // key 删除时触发
-                        case DELETE:
-                            // 清理注册服务缓存
-                            registryServiceCache.remove(providerName);
-                            break;
-                        case PUT:
-                        default:
-                            break;
-                    }
+        // 已被监听则之间返回
+        boolean add = watchingKeySet.add(registerKey);
+        if (!add) return;
+        watchClient.watch(ByteSequence.from(registerKey, StandardCharsets.UTF_8), response -> {
+            for (WatchEvent event : response.getEvents()) {
+                switch (event.getEventType()) {
+                    // key 删除时触发
+                    case DELETE:
+                        // 清理注册服务缓存
+                        registryServiceCache.remove(providerName);
+                        break;
+                    case PUT:
+                    default:
+                        break;
                 }
-            });
-        }
+            }
+        });
     }
 }
