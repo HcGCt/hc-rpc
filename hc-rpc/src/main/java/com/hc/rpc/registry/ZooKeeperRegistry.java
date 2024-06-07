@@ -125,7 +125,6 @@ public class ZooKeeperRegistry implements IRegistry {
 
         // 查询注册中心
         try {
-            System.out.println("查询注册中心。。。。");
             Collection<ServiceInstance<ProviderMeta>> serviceInstances = serviceDiscovery.queryForInstances(providerName);
             List<ProviderMeta> providerMetas = serviceInstances.stream().map(ServiceInstance::getPayload).collect(Collectors.toList());
             // 写入缓存

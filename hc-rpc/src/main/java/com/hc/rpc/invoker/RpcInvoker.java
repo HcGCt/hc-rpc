@@ -106,6 +106,6 @@ public class RpcInvoker implements IRpcInvoker {
         if (this.channel != null && this.channel.isActive()) {
             this.channel.close();
         }
-        System.out.println(">>>>>>>>>>> rpc netty client close.");
+        logger.info(">>>>>>>>>>> rpc netty client close.");
     }
 }
