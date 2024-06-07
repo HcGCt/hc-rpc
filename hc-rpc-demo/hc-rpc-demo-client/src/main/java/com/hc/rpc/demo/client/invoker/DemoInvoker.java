@@ -14,8 +14,10 @@ import com.hc.rpc.invoker.RpcReferenceBean;
 public class DemoInvoker {
     public static void main(String[] args) throws InterruptedException {
         try {
-            testSYN();
-            // testCallback();
+            for (int i = 0; i < 10; i++) {
+                testSYN();
+            }
+            testCallback();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {

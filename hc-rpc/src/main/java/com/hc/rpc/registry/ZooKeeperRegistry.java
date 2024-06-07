@@ -121,7 +121,7 @@ public class ZooKeeperRegistry implements IRegistry {
     public List<ProviderMeta> discoveries(String providerName) {
         // 优先查询服务缓存
         List<ProviderMeta> providerMetasCache = registryServiceCache.readCache();
-        if (providerMetasCache != null) return providerMetasCache;
+        if (providerMetasCache != null && providerMetasCache.size() != 0) return providerMetasCache;
 
         // 查询注册中心
         try {
@@ -129,6 +129,7 @@ public class ZooKeeperRegistry implements IRegistry {
             List<ProviderMeta> providerMetas = serviceInstances.stream().map(ServiceInstance::getPayload).collect(Collectors.toList());
             // 写入缓存
             registryServiceCache.writeCache(providerMetas);
+            watch(providerMetas.get(0).getAddress());
             return providerMetas;
         } catch (Exception e) {
             throw new RuntimeException("服务发现失败", e);
