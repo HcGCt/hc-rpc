@@ -19,7 +19,9 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 
@@ -119,16 +121,16 @@ public class EtcdRegistry implements IRegistry {
     }
 
     // --------- invoker ---------
-    private final RegistryServiceCache registryServiceCache = new RegistryServiceCache();
+    private final Map<String, List<ProviderMeta>> registryServiceCache = new ConcurrentHashMap<>(); // 服务缓存
     private final Set<String> watchingKeySet = new ConcurrentHashSet<>();
 
     @Override
-    public List<ProviderMeta> discoveries(String serviceKey) {
-        List<ProviderMeta> providerMetasCache = registryServiceCache.readCache();
+    public List<ProviderMeta> discoveries(String providerName) {
+        List<ProviderMeta> providerMetasCache = registryServiceCache.get(providerName);
         if (providerMetasCache != null) {
             return providerMetasCache;
         }
-        String searchPrefix = ETCD_ROOT_PATH + serviceKey + "/";
+        String searchPrefix = ETCD_ROOT_PATH + providerName + "/";
 
         try {
             // 前缀查询
@@ -141,15 +143,13 @@ public class EtcdRegistry implements IRegistry {
 
             List<ProviderMeta> providerMetas = keyValues.stream()
                     .map(keyValue -> {
-                        String key = keyValue.getKey().toString(StandardCharsets.UTF_8);
-                        // 监听 key 的变化
-                        watch(key);
+                        watch(providerName);
                         String value = keyValue.getValue().toString(StandardCharsets.UTF_8);
                         return JSONUtil.toBean(value, ProviderMeta.class);
                     })
                     .collect(Collectors.toList());
 
-            registryServiceCache.writeCache(providerMetas);
+            registryServiceCache.put(providerName, providerMetas);
             return providerMetas;
         } catch (Exception e) {
             throw new RuntimeException("服务发现失败", e);
@@ -157,18 +157,19 @@ public class EtcdRegistry implements IRegistry {
     }
 
     @Override
-    public void watch(String serviceNodeKey) {
+    public void watch(String providerName) {
+        String registerKey = ETCD_ROOT_PATH + providerName;
         Watch watchClient = client.getWatchClient();
         // 之前未被监听，开启监听
-        boolean newWatch = watchingKeySet.add(serviceNodeKey);
+        boolean newWatch = watchingKeySet.add(registerKey);
         if (newWatch) {
-            watchClient.watch(ByteSequence.from(serviceNodeKey, StandardCharsets.UTF_8), response -> {
+            watchClient.watch(ByteSequence.from(registerKey, StandardCharsets.UTF_8), response -> {
                 for (WatchEvent event : response.getEvents()) {
                     switch (event.getEventType()) {
                         // key 删除时触发
                         case DELETE:
                             // 清理注册服务缓存
-                            registryServiceCache.cleanCache();
+                            registryServiceCache.remove(providerName);
                             break;
                         case PUT:
                         default:

@@ -17,10 +17,8 @@ import org.apache.curator.x.discovery.details.JsonInstanceSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -36,7 +34,7 @@ public class ZooKeeperRegistry implements IRegistry {
     private CuratorFramework client;
     private ServiceDiscovery<ProviderMeta> serviceDiscovery;
     private final Set<String> localRegisterNodeKeySet = new HashSet<>();    // 本机注册的key集合，用于续期
-    private static final String ZK_ROOT_PATH = "/hc-rpc/zk";   // 根节点
+    private static final String ZK_ROOT_PATH = "/hc-rpc/registry";   // 根节点
 
     public ZooKeeperRegistry() {
         RpcConfig rpcConfig = RpcConfig.getInstance();
@@ -60,8 +58,9 @@ public class ZooKeeperRegistry implements IRegistry {
     @Override
     public void register(ProviderMeta providerMeta) throws Exception {
         serviceDiscovery.registerService(buildServiceInstance(providerMeta));
+        String providerKey = RpcStringUtil.buildProviderKey(providerMeta.getName(), providerMeta.getVersion());
         // 本地服务节点信息缓存
-        String registerKey = ZK_ROOT_PATH + "/" + providerMeta.getAddress();
+        String registerKey = ZK_ROOT_PATH + "/" + providerKey + "/" + providerMeta.getAddress();
         localRegisterNodeKeySet.add(registerKey);
         // 监听节点状态
         // watch(registerKey);
@@ -88,7 +87,8 @@ public class ZooKeeperRegistry implements IRegistry {
     public void unRegister(ProviderMeta providerMeta) throws Exception {
         serviceDiscovery.unregisterService(buildServiceInstance(providerMeta));
         // 移除本地缓存
-        String registerKey = ZK_ROOT_PATH + "/" + providerMeta.getAddress();
+        String providerKey = RpcStringUtil.buildProviderKey(providerMeta.getName(), providerMeta.getVersion());
+        String registerKey = ZK_ROOT_PATH + "/" + providerKey + "/" + providerMeta.getAddress();
         localRegisterNodeKeySet.remove(registerKey);
     }
 
@@ -114,22 +114,23 @@ public class ZooKeeperRegistry implements IRegistry {
     }
 
     // --------- invoker ---------
-    private final RegistryServiceCache registryServiceCache = new RegistryServiceCache();   // 服务缓存
+    private final Map<String, List<ProviderMeta>> registryServiceCache = new ConcurrentHashMap<>(); // 服务缓存
     private final Set<String> watchingKeySet = new ConcurrentHashSet<>();                   // 正在监听的key集合
 
     @Override
     public List<ProviderMeta> discoveries(String providerName) {
         // 优先查询服务缓存
-        List<ProviderMeta> providerMetasCache = registryServiceCache.readCache();
+        List<ProviderMeta> providerMetasCache = registryServiceCache.get(providerName);
         if (providerMetasCache != null && providerMetasCache.size() != 0) return providerMetasCache;
 
         // 查询注册中心
         try {
+            System.out.println("查询注册中心。。。。");
             Collection<ServiceInstance<ProviderMeta>> serviceInstances = serviceDiscovery.queryForInstances(providerName);
             List<ProviderMeta> providerMetas = serviceInstances.stream().map(ServiceInstance::getPayload).collect(Collectors.toList());
             // 写入缓存
-            registryServiceCache.writeCache(providerMetas);
-            watch(providerMetas.get(0).getAddress());
+            registryServiceCache.put(providerName, providerMetas);
+            watch(providerName);
             return providerMetas;
         } catch (Exception e) {
             throw new RuntimeException("服务发现失败", e);
@@ -140,18 +141,23 @@ public class ZooKeeperRegistry implements IRegistry {
      * 监听服务状态
      */
     @Override
-    public void watch(String serviceAddress) {
-        String watchKey = ZK_ROOT_PATH + "/" + serviceAddress;
+    public void watch(String key) {
+        String watchKey = ZK_ROOT_PATH + "/" + key;
         boolean add = watchingKeySet.add(watchKey);
         if (!add) return;
         CuratorCache curatorCache = CuratorCache.build(client, watchKey);
-        curatorCache.start();
         curatorCache.listenable().addListener(
                 CuratorCacheListener
                         .builder()
-                        .forDeletes(childData -> registryServiceCache.cleanCache())
-                        .forChanges(((oldNode, node) -> registryServiceCache.cleanCache()))
+                        .forDeletes(childData -> {
+                            registryServiceCache.remove(key);
+                        })
+                        .forChanges(((oldNode, node) -> {
+                            registryServiceCache.remove(key);
+                        }))
                         .build()
         );
+
+        curatorCache.start();
     }
 }
