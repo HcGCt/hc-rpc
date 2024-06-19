@@ -1,2 +1,4 @@
 json=com.hc.rpc.protocol.serialize.JsonSerializer
 hessian=com.hc.rpc.protocol.serialize.HessianSerializer
+kryo=com.hc.rpc.protocol.serialize.KryoSerializer
+protostuff=com.hc.rpc.protocol.serialize.ProtostuffSerializer
