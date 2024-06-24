@@ -96,8 +96,8 @@
 - [x] 序列化
   - [x] Json
   - [x] Hessian
-  - [ ] Protostuff
-  - [ ] Kryo
+  - [x] Protostuff
+  - [x] Kryo
 - [x] 负载均衡
   - [x] 轮询策略
   - [x] 一致性哈希
